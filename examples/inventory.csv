@@ -1,0 +1,6 @@
+shot,seed,stage,arm,clip,brief
+signal-cut,41,preview,base,base.gif,Schematic timing test. The link should break when the descending marker reaches it.
+signal-cut,41,preview,style,style.gif,Schematic timing test. The link should break when the descending marker reaches it.
+signal-cut,41,preview,action,action.gif,Schematic timing test. The link should break when the descending marker reaches it.
+signal-cut,41,preview,both,both.gif,Schematic timing test. The link should break when the descending marker reaches it.
+
