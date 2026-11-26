@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>H3 Shot Lab · Blind review</title>
+<style>
+:root{color-scheme:dark;font:16px/1.5 system-ui;background:#101418;color:#edf2f2}body{max-width:960px;margin:3rem auto;padding:0 1rem}h1{font-size:2rem}article{background:#1a2127;border:1px solid #36434d;border-radius:12px;padding:1.2rem;margin:1rem 0}video,img{max-width:100%;max-height:420px;display:block;margin:auto}label{display:inline-block;margin:.4rem .8rem .4rem 0}input,textarea,select,button{font:inherit;padding:.4rem;border-radius:5px}textarea{display:block;width:95%;min-height:2.5em}button{background:#a4e9d3;color:#072e22;padding:.6rem 1rem;cursor:pointer}small{color:#b2c4ca}
+</style>
+<h1>Blind shot review</h1><p>Watch once at normal speed. Check material response, character identity, motion and whether the intended gameplay cue reads. Mark N/A when the brief gives no basis for a judgment.</p>
+<form id="form"><label>Your reviewer ID <input id="reviewer" required></label><main></main><button>Export completed review</button> <output id="status"></output></form>
+<script>
+const data=/*BATCH*/null;
+const criteria={material:"Materials and light",identity:"Character consistency",motion:"Motion and contact",cue:"Gameplay cue"};
+const main=document.querySelector("main");
+const storageKey="h3-review-"+data.batch;
+let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||"{}")}catch{}
+document.querySelector("#reviewer").value=saved.reviewer||"";
+const el=(tag,text)=>{const node=document.createElement(tag);if(text)node.textContent=text;return node};
+for(const [index,clip] of data.clips.entries()){
+ const card=el("article");card.dataset.id=clip.id;card.append(el("small","Candidate "+(index+1)+" / "+data.clips.length),el("h2",clip.brief));
+ const media=el(clip.media.endsWith(".gif")?"img":"video");media.src=clip.media;media.alt="Diagnostic animation";media.controls=true;media.preload="metadata";card.append(media);
+ for(const [key,name] of Object.entries(criteria)){
+  const label=el("label",name+" ");const select=el("select");select.name=key;select.required=true;
+  for(const [value,text] of [["","Choose"],["pass","Pass"],["fail","Fail"],["na","N/A"]]){const option=el("option",text);option.value=value;select.append(option)}
+  select.value=saved.votes?.[clip.id]?.[key]||"";label.append(select);card.append(label)
+ }
+ const label=el("label","Evidence · include timestamp and observed defect for a failed check");
+ const note=el("textarea");note.name="evidence";note.value=saved.votes?.[clip.id]?.evidence||"";label.append(note);card.append(label);main.append(card)
+}
+function current(){
+ const votes={};for(const card of main.children){votes[card.dataset.id]=Object.fromEntries(Array.from(card.querySelectorAll("select,textarea"),e=>[e.name,e.value]))}
+ return {batch:data.batch,reviewer:document.querySelector("#reviewer").value.trim(),votes}
+}
+const form=document.querySelector("form");
+form.addEventListener("input",()=>{try{localStorage.setItem(storageKey,JSON.stringify(current()))}catch{}});
+form.addEventListener("submit",e=>{e.preventDefault();const row=current();const status=document.querySelector("#status");
+ if(!row.reviewer){status.textContent="Enter a reviewer ID.";return}
+ for(const [i,v] of Object.values(row.votes).entries()){const scores=Object.keys(criteria).map(k=>v[k]);
+ if(scores.every(s=>s==="na")||(scores.includes("fail")&&!v.evidence.trim())){status.textContent="Check the ratings and evidence for candidate "+(i+1)+".";return}}
+ const url=URL.createObjectURL(new Blob([JSON.stringify(row,null,2)],{type:"application/json"}));const a=el("a");a.href=url;a.download="review-"+row.reviewer.replace(/[^A-Za-z0-9_-]/g,"_")+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent="Review exported."
+});
+</script></html>
+
